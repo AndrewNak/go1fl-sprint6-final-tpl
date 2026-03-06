@@ -19,9 +19,7 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Пробуем разные пути для index.html
 	paths := []string{
-		//"index.html",    // если запуск из корня
-		//"../index.html", // если запуск из cmd
-		"./index.html", // текущая директория
+		"../index.html", // текущая директория
 	}
 
 	var html []byte
@@ -102,8 +100,8 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	savePaths := []string{
 		filename,         // текущая директория (cmd)
 		"../" + filename, // корневая директория проекта
-		"/home/andrew/practice/go1fl-sprint6-final-tpl/go1fl-sprint6-final-tpl/" + filename, // абсолютный путь
 	}
+	
 
 	var outputFile *os.File
 	var savedPath string
