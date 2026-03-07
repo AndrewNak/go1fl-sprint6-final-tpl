@@ -17,31 +17,13 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Пробуем разные пути для index.html
-	paths := []string{
-		"../index.html", // текущая директория
-	}
-
-	var html []byte
-	var err error
-
+	paths := []string{"index.html", "../index.html", "../index.html"}
 	for _, path := range paths {
-		html, err = os.ReadFile(path)
-		if err == nil {
-			log.Printf("Found index.html at: %s", path)
-			break
+		if _, err := os.Stat(path); err == nil {
+			http.ServeFile(w, r, path)
+			return
 		}
 	}
-
-	if err != nil {
-		log.Printf("Error reading index.html: %v", err)
-		http.Error(w, "Internal server error - index.html not found", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write(html)
 }
 
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
@@ -95,47 +77,24 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		prefix = "text_to_morse_"
 	}
 
-	// Пробуем сохранить в разные места
 	filename := prefix + timestamp + ext
-	savePaths := []string{
-		filename,         // текущая директория (cmd)
-		"../" + filename, // корневая директория проекта
-	}
+
+	original := string(content)
 	
-
-	var outputFile *os.File
-	var savedPath string
-
-	for _, path := range savePaths {
-		outputFile, err = os.Create(path)
-		if err == nil {
-			savedPath = path
-			log.Printf("Creating output file at: %s", path)
-			break
-		}
-	}
-
-	if err != nil {
-		log.Printf("Error creating output file: %v", err)
-		http.Error(w, "Internal server error - cannot create output file", http.StatusInternalServerError)
-		return
-	}
-	defer outputFile.Close()
-
-	_, err = outputFile.WriteString(converted)
-	if err != nil {
-		log.Printf("Error writing to output file: %v", err)
+	// Сохраняем результат в новый файл
+	if err := os.WriteFile(filename, []byte(converted), 0644); err != nil {
+		log.Printf("Error writing output file: %v", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
-
-	log.Printf("Created output file: %s", savedPath)
+	log.Printf("Created output file: %s", filename)
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 
-	response := "Результат конвертации:\n\n" + converted + "\n\n"
-	response += "Файл сохранен как: " + filepath.Base(savedPath)
+	response := "Исходный текст:\n" + original + "\n\n" +
+		"Результат конвертации:\n" + converted + "\n\n" +
+		"Файл сохранен как: " + filename
 
 	w.Write([]byte(response))
 }

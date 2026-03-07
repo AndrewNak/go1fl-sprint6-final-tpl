@@ -62,18 +62,11 @@ func AutoDetectAndConvert(input string) (string, error) {
 		return morse.ToMorse(input), nil
 	}
 	
-	containsMorse := false
 	for _, r := range input {
 		if r == '.' || r == '-' {
-			containsMorse = true
-			break
+			return morse.ToText(input), nil
 		}
 	}
-	
-	if containsMorse {
-		return morse.ToText(input), nil
-	}
-	
 	return morse.ToMorse(input), nil
 }
 
